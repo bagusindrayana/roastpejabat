@@ -2,18 +2,6 @@ import { json } from '@sveltejs/kit';
 import * as cheerio from 'cheerio';
 
 
-function bersihkanTeks(htmlString) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlString, 'text/html');
-
-    let teksBersih = doc.body.textContent || "";
-
-    // Membersihkan spasi berlebih
-    teksBersih = teksBersih.replace(/\s+/g, ' ').trim();
-
-    return teksBersih;
-}
-
 function parseBerita(htmlString) {
     const $ = cheerio.load(htmlString);
     const newsList = [];
@@ -76,108 +64,16 @@ async function getBerita(nama) {
     return data;
 }
 
-
-
-async function scrapeWikipediaProfile(nama) {
-
-    const berita = await getBerita(nama);
-
-    const url = `https://id.wikipedia.org/wiki/${encodeURIComponent(nama.replace(/ /g, '_'))}`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const html = await response.text();
-    const $ = cheerio.load(html);
-
-    //hapus script dan style
-    $("style, script, noscript").remove();
-
-    const result = {
-        profil: {},
-        seksi_konten: {},
-        berita: berita
-    };
-
-    const infobox = $('table.infobox');
-
-    if (infobox.length) {
-        result.profil.nama = $('#firstHeading').text().trim();
-        infobox.find('tr').each((i, el) => {
-            const header = $(el).find('th').text().trim();
-            const td = $(el).find('td').first();
-
-            if (header && td.length) {
-                const cleanHeader = header.replace(/\[\d+\]/g, '').trim();
-                const key = cleanHeader.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-
-                let data;
-                const listItems = td.find('li');
-
-                if (listItems.length > 0) {
-                    data = listItems.map((j, li) => {
-                        return $(li).text().replace(/\[\d+\]/g, '').trim();
-                    }).get();
-                } else {
-                    data = td.text().trim();
-                    data = data.replace(/\[\d+\]/g, '').trim(); // Bersihkan catatan kaki
-                }
-
-                if (key && data) {
-                    result.profil[key] = data;
-                }
-            }
-        });
-        const imageElement = infobox.find('.infobox-image img').first();
-        result.profil.gambar = imageElement.attr('src') ? `https:${imageElement.attr('src')}` : null;
-    }
-
-    const contentArea = $('#mw-content-text > div.mw-parser-output');
-
-    let currentSectionTitle = 'Pendahuluan';
-    let currentSectionContent = [];
-
-    contentArea.children().each((i, el) => {
-        const element = $(el);
-        if (element.is('div.mw-heading.mw-heading2')) {
-            if (currentSectionContent.length > 0) {
-                result.seksi_konten[currentSectionTitle] = currentSectionContent;
-            }
-            let rawTitle = element.find('h2').text().trim();
-            currentSectionTitle = rawTitle.replace(/\[sunting\]/g, '').trim();
-            currentSectionContent = []; // Reset konten untuk bagian baru
-
-        } else if (element.is('p')) {
-            let text = element.text().trim();
-            text = text.replace(/\[\d+\]/g, '').trim();
-
-            if (text) {
-                currentSectionContent.push(text);
-            }
-        }
-    });
-
-    if (currentSectionContent.length > 0) {
-        result.seksi_konten[currentSectionTitle] = currentSectionContent;
-    }
-
-    return result;
-    
-}
-
 export async function GET({ url }) {
     const searchParams = url.searchParams;
     const nama = url.searchParams.get('nama');
     try {
 
-        const reuslt = await scrapeWikipediaProfile(nama);
+        const reuslt = await getBerita(nama);
         if (reuslt) {
             return json(reuslt);
         } else {
-            return json({ error: 'Gagal mengambil data profil.' }, { status: 500 });
+            return json({ error: 'Gagal mengambil data berita.' }, { status: 500 });
         }
 
     } catch (err) {
