@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+body {
+    font-family: 'Inter', sans-serif;
+    /* Diterapkan oleh Svelte ke body, tapi kita set di sini untuk kepastian */
+    background-color: #0a0a0a;
+    /* neutral-950 */
+    color: #d4d4d4;
+    /* neutral-300 */
+    min-height: 100vh;
+}
+
+.font-tech-mono {
+    font-family: 'Share Tech Mono', monospace;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #404040;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #525252;
+}
+
+/* Menghilangkan panah default pada input number */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
