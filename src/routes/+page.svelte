@@ -349,7 +349,7 @@
         </div>
 
         {#if roastingResult != ""}
-            <div class="rounded-lg shadow-md p-6">
+            <div class=" shadow-md p-6">
                 <h2 class="text-2xl font-semibold mb-4">Roasting Result</h2>
                 <div
                     class="flex flex-col md:flex-row items-center justify-center space-x-4"
@@ -392,7 +392,7 @@
                 target="_blank">RoastLinkedin</a
             >
             <a
-                href="https://roastofficial.my.id"
+                href="https://roastwaifu.my.id"
                 class="underline"
                 target="_blank">RoastWaifu</a
             >
@@ -412,7 +412,7 @@
                 /></a
             >
             <iframe
-                src="https://ghbtns.com/github-btn.html?user=bagusindrayana&repo=roastofficial&type=star&count=true&size=large"
+                src="https://ghbtns.com/github-btn.html?user=bagusindrayana&repo=roastpejabat&type=star&count=true&size=large"
                 frameborder="0"
                 scrolling="0"
                 width="170"
