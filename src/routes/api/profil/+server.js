@@ -192,6 +192,6 @@ export async function GET({ url }) {
 
     } catch (error) {
         console.error('Error saat scraping:', error);
-        return json({ error: error.message }, { status: 500 });
+        return json({ error: error }, { status: 500 });
     }
 }
