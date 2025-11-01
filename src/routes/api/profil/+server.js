@@ -86,97 +86,93 @@ async function getBerita(nama) {
 
 
 async function scrapeWikipediaProfile(nama) {
-    try {
-        const berita = await getBerita(nama);
 
-        const url = `https://id.wikipedia.org/wiki/${encodeURIComponent(nama.replace(/ /g, '_'))}`;
+    const berita = await getBerita(nama);
 
-        const response = await fetch(url);
+    const url = `https://id.wikipedia.org/wiki/${encodeURIComponent(nama.replace(/ /g, '_'))}`;
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+    const response = await fetch(url);
 
-        const html = await response.text();
-        const $ = cheerio.load(html);
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-        //hapus script dan style
-        $("style, script, noscript").remove();
+    const html = await response.text();
+    const $ = cheerio.load(html);
 
-        const result = {
-            profil: {},
-            seksi_konten: {},
-            berita: berita
-        };
+    //hapus script dan style
+    $("style, script, noscript").remove();
 
-        const infobox = $('table.infobox');
+    const result = {
+        profil: {},
+        seksi_konten: {},
+        berita: berita
+    };
 
-        if (infobox.length) {
-            result.profil.nama = $('#firstHeading').text().trim();
-            infobox.find('tr').each((i, el) => {
-                const header = $(el).find('th').text().trim();
-                const td = $(el).find('td').first();
+    const infobox = $('table.infobox');
 
-                if (header && td.length) {
-                    const cleanHeader = header.replace(/\[\d+\]/g, '').trim();
-                    const key = cleanHeader.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+    if (infobox.length) {
+        result.profil.nama = $('#firstHeading').text().trim();
+        infobox.find('tr').each((i, el) => {
+            const header = $(el).find('th').text().trim();
+            const td = $(el).find('td').first();
 
-                    let data;
-                    const listItems = td.find('li');
+            if (header && td.length) {
+                const cleanHeader = header.replace(/\[\d+\]/g, '').trim();
+                const key = cleanHeader.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 
-                    if (listItems.length > 0) {
-                        data = listItems.map((j, li) => {
-                            return $(li).text().replace(/\[\d+\]/g, '').trim();
-                        }).get();
-                    } else {
-                        data = td.text().trim();
-                        data = data.replace(/\[\d+\]/g, '').trim(); // Bersihkan catatan kaki
-                    }
+                let data;
+                const listItems = td.find('li');
 
-                    if (key && data) {
-                        result.profil[key] = data;
-                    }
+                if (listItems.length > 0) {
+                    data = listItems.map((j, li) => {
+                        return $(li).text().replace(/\[\d+\]/g, '').trim();
+                    }).get();
+                } else {
+                    data = td.text().trim();
+                    data = data.replace(/\[\d+\]/g, '').trim(); // Bersihkan catatan kaki
                 }
-            });
-            const imageElement = infobox.find('.infobox-image img').first();
-            result.profil.gambar = imageElement.attr('src') ? `https:${imageElement.attr('src')}` : null;
-        }
 
-        const contentArea = $('#mw-content-text > div.mw-parser-output');
-
-        let currentSectionTitle = 'Pendahuluan';
-        let currentSectionContent = [];
-
-        contentArea.children().each((i, el) => {
-            const element = $(el);
-            if (element.is('div.mw-heading.mw-heading2')) {
-                if (currentSectionContent.length > 0) {
-                    result.seksi_konten[currentSectionTitle] = currentSectionContent;
-                }
-                let rawTitle = element.find('h2').text().trim();
-                currentSectionTitle = rawTitle.replace(/\[sunting\]/g, '').trim();
-                currentSectionContent = []; // Reset konten untuk bagian baru
-
-            } else if (element.is('p')) {
-                let text = element.text().trim();
-                text = text.replace(/\[\d+\]/g, '').trim();
-
-                if (text) {
-                    currentSectionContent.push(text);
+                if (key && data) {
+                    result.profil[key] = data;
                 }
             }
         });
-
-        if (currentSectionContent.length > 0) {
-            result.seksi_konten[currentSectionTitle] = currentSectionContent;
-        }
-
-        return result;
-
-    } catch (error) {
-        console.error('Terjadi kesalahan saat scraping:', error.message);
-        return null;
+        const imageElement = infobox.find('.infobox-image img').first();
+        result.profil.gambar = imageElement.attr('src') ? `https:${imageElement.attr('src')}` : null;
     }
+
+    const contentArea = $('#mw-content-text > div.mw-parser-output');
+
+    let currentSectionTitle = 'Pendahuluan';
+    let currentSectionContent = [];
+
+    contentArea.children().each((i, el) => {
+        const element = $(el);
+        if (element.is('div.mw-heading.mw-heading2')) {
+            if (currentSectionContent.length > 0) {
+                result.seksi_konten[currentSectionTitle] = currentSectionContent;
+            }
+            let rawTitle = element.find('h2').text().trim();
+            currentSectionTitle = rawTitle.replace(/\[sunting\]/g, '').trim();
+            currentSectionContent = []; // Reset konten untuk bagian baru
+
+        } else if (element.is('p')) {
+            let text = element.text().trim();
+            text = text.replace(/\[\d+\]/g, '').trim();
+
+            if (text) {
+                currentSectionContent.push(text);
+            }
+        }
+    });
+
+    if (currentSectionContent.length > 0) {
+        result.seksi_konten[currentSectionTitle] = currentSectionContent;
+    }
+
+    return result;
+    
 }
 
 /** @type {import('./$types').RequestHandler} */
@@ -196,6 +192,6 @@ export async function GET({ url }) {
 
     } catch (error) {
         console.error('Error saat scraping:', error);
-        return json({ error: 'Gagal memproses data profil.' }, { status: 500 });
+        return json({ error: error.message }, { status: 500 });
     }
 }

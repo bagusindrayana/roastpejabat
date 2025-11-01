@@ -13,7 +13,7 @@ const limiter = new RateLimiter({
 
 
 export const POST = async (event) => {
-    const allowedOrigins = ['http://localhost:5173'];
+    const allowedOrigins = ['http://localhost:5173','https://roastpejabat.vercel.app','https://roastpejabat.pages.dev'];
     const origin = event.request.headers.get('origin');
     const headersCors = {
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
