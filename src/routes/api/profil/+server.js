@@ -5,20 +5,12 @@ import * as cheerio from 'cheerio';
 
 
 function bersihkanTeks(htmlString) {
-    // 1. Mendekode string (agar \u003C menjadi <, \u003E menjadi >)
-    // Ini terjadi secara implisit ketika string ini diinisialisasi di JS.
-    // Untuk memastikan, kita bisa menggunakan JSON.parse jika teks awalnya dari JSON.
-    // Dalam kasus ini, kita bisa memanfaatkan DOMParser.
-
-    // 2. Menggunakan DOMParser untuk membuat dokumen virtual
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
 
-    // 3. Mengambil konten teks dari body dokumen
-    // innerText akan lebih baik dalam memformat spasi dan baris baru
     let teksBersih = doc.body.textContent || "";
 
-    // Membersihkan spasi berlebih yang mungkin muncul dari penghapusan tag
+    // Membersihkan spasi berlebih
     teksBersih = teksBersih.replace(/\s+/g, ' ').trim();
 
     return teksBersih;
@@ -30,16 +22,13 @@ function parseBerita(htmlString) {
 
     // Selector untuk setiap item artikel
     $('.articles--iridescent-list--item').each((index, element) => {
-        console.log(index);
         const article = $(element);
 
-        // Ambil Judul, URL, Kategori, dan Tgl Publikasi
         const titleElement = article.find('.articles--iridescent-list--text-item__title-link');
         const title = titleElement.text().trim();
         const url = titleElement.attr('href');
         const category = article.find('.articles--iridescent-list--text-item__category').text().trim();
 
-        // Ambil Tanggal ISO 8601 (lebih akurat daripada teks "5 bulan lalu")
         const datetimeAttribute = article.find('.articles--iridescent-list--text-item__time').attr('datetime');
         const dateText = article.find('.articles--iridescent-list--text-item__time').attr('title');
 
